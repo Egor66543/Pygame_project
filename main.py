@@ -30,6 +30,16 @@ def load_image(name, colorkey=None):
     return image
 
 
+def description_f():
+    h = 0
+    font2 = pygame.font.Font(None, 24)
+    strings = description.split('?')
+    for i in range(len(strings)):
+        text = font2.render(strings[i].replace('\n', ''), True, 'white')
+        board.screen.blit(text, (50, 500 + h))
+        h += 15
+
+
 class Board:
     def __init__(self, h, w):
         self.h, self.w = h, w
@@ -48,18 +58,9 @@ class Board:
         field_for_entering_letters = pygame.draw.rect(self.screen, 'white', (400, 5, 395, 300), 2)
 
         k = 0
-        for x in range(len(word)):
+        for _ in range(len(word)):
             pygame.draw.rect(self.screen, 'white', (50 + k, 400, self.a, self.a), 2)
             k += self.a
-
-    def description(self):
-        k = 0
-        font2 = pygame.font.Font(None, 24)
-        if len(description) > 80:
-            pass
-        else:
-            text = font2.render(description, True, 'white')
-            board.screen.blit(text, (50, 500))
 
 
 board = Board(800, 700)
@@ -78,14 +79,9 @@ while running:
             running = False
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN and (0 <= x <= 50 and 0 <= y <= 51):
-            board.description()
+            description_f()
 
     all_lamp_sprites.draw(board.screen)
     pygame.display.flip()
 
 pygame.quit()
-
-
-
-
-
