@@ -58,7 +58,11 @@ def level_screen():
 a, b = level_screen()
 con = sqlite3.connect("game_words.db")
 cur = con.cursor()
-id_word = cur.execute(f'''select id from words where id={random.randint(a, b)}''').fetchone()[0]
+while True:
+    id_word = cur.execute(f'''select id from words where id={random.randint(a, b)}''').fetchone()[0]
+    characteristic = cur.execute(f'''select characteristic from words where id={id_word}''').fetchone()[0]
+    if characteristic == '-':
+        break
 word = cur.execute(f'''SELECT word FROM words WHERE id={id_word}''').fetchone()[0]
 description = cur.execute(f'''SELECT description FROM words WHERE id={id_word}''').fetchone()[0]
 level = cur.execute(f'''SELECT level FROM words WHERE id={id_word}''').fetchone()[0]
@@ -94,6 +98,8 @@ class Board:
             pygame.draw.rect(self.screen, 'white', (50 + k, 400, self.a, self.a), 2)
             k += self.a
 
+text_ = ''
+
 
 class TextInputBox(pygame.sprite.Sprite):
     def __init__(self, x, y, w, font):
@@ -104,11 +110,10 @@ class TextInputBox(pygame.sprite.Sprite):
         self.width = w
         self.font = font
         self.active = False
-        self.text = ""
         self.render_text()
 
     def render_text(self):
-        t_surf = self.font.render(self.text, True, self.color, self.backcolor)
+        t_surf = self.font.render(text_, True, self.color, self.backcolor)
         self.image = pygame.Surface((max(self.width, t_surf.get_width()+10), t_surf.get_height()+10), pygame.SRCALPHA)
         if self.backcolor:
             self.image.fill(self.backcolor)
@@ -117,6 +122,7 @@ class TextInputBox(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=self.pos)
 
     def update(self, event_list):
+        global text_
         for event in event_list:
             if event.type == pygame.MOUSEBUTTONDOWN and not self.active:
                 self.active = self.rect.collidepoint(event.pos)
@@ -124,22 +130,23 @@ class TextInputBox(pygame.sprite.Sprite):
                 if event.key == pygame.K_RETURN:
                     self.active = False
                 elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE:
-                    self.text = self.text[:-1]  # Wrong work!!!!
+                    text_ = text_[:-1]  # Wrong work!!!!
                 else:
-                    self.text += event.unicode
+                    text_ += event.unicode
                 self.render_text()
 
 
-def letter_in_word():  # absolute wrong work
-    letter = str(grop_1.update(event_list))
-    print(letter)
+def letter_in_word():
+    letter = text_[-1]
+    h, c = 0, 0
     if letter in word:
-        sp = [i for i, letter in enumerate(word) if letter == letter]
-        print(sp)
+        sp = [i for i, j in enumerate(word) if j == letter]
+        font = pygame.font.Font(None, 50)
         for i in range(len(sp)):
             text = font.render(f'{letter}', True, 'white')
-            board.screen.blit(text, (50 + 10 * (sp[i] + 1), 400 + 10 * (sp[i] + 1)))
-            print(letter)
+            board.screen.blit(text, (60 + 50 * sp[i], 400))
+    elif letter not in word:
+        pass
 
 
 board = Board(800, 700)
@@ -170,10 +177,11 @@ while running:
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN and (0 <= x <= 50 and 0 <= y <= 51):
             description_f()
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_z:
             letter_in_word()
     all_lamp_sprites.draw(board.screen)
     grop_1.update(event_list)
+
     grop_1.draw(board.screen)
     pygame.display.flip()
 
