@@ -7,13 +7,6 @@ import sys
 pygame.init()
 pygame.font.init()
 
-con = sqlite3.connect("game_words.db")
-cur = con.cursor()
-id_word = cur.execute(f'''select id from words where id={random.randint(1, 10)}''').fetchone()[0]
-word = cur.execute(f'''SELECT word FROM words WHERE id={id_word}''').fetchone()[0]
-description = cur.execute(f'''SELECT description FROM words WHERE id={id_word}''').fetchone()[0]
-level = cur.execute(f'''SELECT level FROM words WHERE id={id_word}''').fetchone()[0]
-
 
 def load_image(name, colorkey=None):
     if not os.path.isfile(name):
@@ -28,6 +21,47 @@ def load_image(name, colorkey=None):
     else:
         image.convert_alpha()
     return image
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def level_screen():
+    screen = pygame.display.set_mode((800, 400))
+    img1 = load_image('data/level_1.bmp')
+    img2 = load_image('data/level_2.bmp')
+    img3 = load_image('data/level_3.bmp')
+    # img4 = load_image('data/бонусный уровень')
+    screen.blit(img1, (50, 150))
+    screen.blit(img2, (250, 150))
+    screen.blit(img3, (450, 150))
+    # screen.blit(img3, (650, 150)
+    font = pygame.font.Font(None, 40)
+    text = font.render('ВЫБЕРИТЬ УРОВЕНЬ', True, 'white')
+    screen.blit(text, (260, 20))
+    while True:
+        for event in pygame.event.get():
+            x, y = pygame.mouse.get_pos()
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN and (50 <= x <= 240 and 150 <= y <= 250):
+                return (1, 10)
+            elif event.type == pygame.MOUSEBUTTONDOWN and (250 <= x <= 440 and 150 <= y <= 250):
+                return (11, 20)
+            elif event.type == pygame.MOUSEBUTTONDOWN and (450 <= x <= 640 and 150 <= y <= 250):
+                return (21, 30)
+        pygame.display.flip()
+
+
+a, b = level_screen()
+con = sqlite3.connect("game_words.db")
+cur = con.cursor()
+id_word = cur.execute(f'''select id from words where id={random.randint(a, b)}''').fetchone()[0]
+word = cur.execute(f'''SELECT word FROM words WHERE id={id_word}''').fetchone()[0]
+description = cur.execute(f'''SELECT description FROM words WHERE id={id_word}''').fetchone()[0]
+level = cur.execute(f'''SELECT level FROM words WHERE id={id_word}''').fetchone()[0]
 
 
 def description_f():
@@ -89,16 +123,27 @@ class TextInputBox(pygame.sprite.Sprite):
             if event.type == pygame.KEYDOWN and self.active:
                 if event.key == pygame.K_RETURN:
                     self.active = False
-                elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
+                elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE:
+                    self.text = self.text[:-1]  # Wrong work!!!!
                 else:
                     self.text += event.unicode
                 self.render_text()
 
 
+def letter_in_word():  # absolute wrong work
+    letter = str(grop_1.update(event_list))
+    print(letter)
+    if letter in word:
+        sp = [i for i, letter in enumerate(word) if letter == letter]
+        print(sp)
+        for i in range(len(sp)):
+            text = font.render(f'{letter}', True, 'white')
+            board.screen.blit(text, (50 + 10 * (sp[i] + 1), 400 + 10 * (sp[i] + 1)))
+            print(letter)
+
+
 board = Board(800, 700)
 board.render()
-
 all_lamp_sprites = pygame.sprite.Group()
 lamp = pygame.sprite.Sprite(all_lamp_sprites)
 lamp.image = load_image("data/lamp.jpg")
@@ -113,8 +158,8 @@ field_for_entering_letters = pygame.draw.rect(board.screen, 'white', (400, 5, 39
 font_letter = pygame.font.Font(None, 100)
 text_input_box = TextInputBox(400, 30, 395, font_letter)
 grop_1 = pygame.sprite.Group(text_input_box)
-clock = pygame.time.Clock()
 
+clock = pygame.time.Clock()
 running = True
 while running:
     clock.tick(60)
@@ -125,6 +170,8 @@ while running:
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN and (0 <= x <= 50 and 0 <= y <= 51):
             description_f()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            letter_in_word()
     all_lamp_sprites.draw(board.screen)
     grop_1.update(event_list)
     grop_1.draw(board.screen)
