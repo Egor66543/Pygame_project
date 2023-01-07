@@ -20,7 +20,6 @@ FPS = 50
 answers = [1, 1, 1, 1]
 vol = 1.0
 flPause = False
-clock = pygame.time.Clock()
 running = False
 timer = 0
 timer_game = 0
@@ -45,7 +44,8 @@ def load_image(name, colorkey=None):
     return image
 
 
-def draw_text(screen, text_x, text_y, size, message_text):
+def draw_text(text_x, text_y, size, message_text):
+    global screen
     font = pygame.font.Font(None, size)
     text = font.render(message_text, True, (255, 255, 255))
     screen.blit(text, (text_x, text_y))
@@ -67,27 +67,27 @@ def render():
         image = load_image('hall_help.jpg')
         screen.blit(image, (140, 480))
 
-    draw_text(screen, 60, 90, 30, f[question_number])
+    draw_text(60, 90, 30, f[question_number])
     if answers[0]:
-        draw_text(screen, 130, 210, 30, f[question_number + 1])
+        draw_text(130, 210, 30, f[question_number + 1])
     if answers[1]:
-        draw_text(screen, 130, 280, 30, f[question_number + 2])
+        draw_text(130, 280, 30, f[question_number + 2])
     if answers[2]:
-        draw_text(screen, 130, 350, 30, f[question_number + 3])
+        draw_text(130, 350, 30, f[question_number + 3])
     if answers[3]:
-        draw_text(screen, 130, 420, 30, f[question_number + 4])
+        draw_text(130, 420, 30, f[question_number + 4])
     if suggest_hall:
         if answers[0]:
-            draw_text(screen, 540, 210, 30, hall_help_list[0])
+            draw_text(540, 210, 30, hall_help_list[0])
         if answers[1]:
-            draw_text(screen, 540, 280, 30, hall_help_list[1])
+            draw_text(540, 280, 30, hall_help_list[1])
         if answers[2]:
-            draw_text(screen, 540, 350, 30, hall_help_list[2])
+            draw_text(540, 350, 30, hall_help_list[2])
         if answers[3]:
-            draw_text(screen, 540, 420, 30, hall_help_list[3])
+            draw_text(540, 420, 30, hall_help_list[3])
 
-    draw_text(screen, 470, 500, 30, f"points {str(points)}")
-    draw_text(screen, 360, 500, 30, f"Время {str(int(timer))}")
+    draw_text(470, 500, 30, f"points {str(points)}")
+    draw_text(360, 500, 30, f"Время {str(int(timer))}")
 
 
 def render_menu():
@@ -99,23 +99,25 @@ def render_menu():
     screen.blit(image, (15, 410))
     image = load_image('1.svg')
     screen.blit(image, (300, 20))
-    draw_text(screen, 70, 60, 30, "Level 1")
-    draw_text(screen, 70, 130, 30, "Level 2")
-    draw_text(screen, 70, 430, 30, "Выход")
+    draw_text(70, 60, 30, "Level 1")
+    draw_text(70, 130, 30, "Level 2")
+    draw_text(70, 430, 30, "Выход")
 
 
 def checking_the_answer():
     global points, question_number, user_answer, running, end_game, answers
     if user_answer == int(f[question_number + 5]):
+        play_music("data/music_right_answer.mp3")
         points += 1
+    else:
+        play_music("data/music_wrong_answer.mp3")
     user_answer = 0
     next_question()
 
 
 def suggest_50_50():
     global suggest, question_number, answers
-    pygame.mixer.music.load('data/50_50_music.mp3')
-    pygame.mixer.music.play()
+    play_music('data/50_50_music.mp3')
     suggest = False
     while True:
         false_answer = random.choice([1, 2, 3, 4])
@@ -128,8 +130,7 @@ def suggest_50_50():
 
 def hall_help():
     global hall, hall_help_list, suggest_hall
-    pygame.mixer.music.load('data/hall_help.mp3')
-    pygame.mixer.music.play()
+    play_music('data/hall_help.mp3')
     hall = False
     suggest_hall = True
     random.shuffle(hall_help_list)
@@ -149,10 +150,25 @@ def next_question():
 
 def time_out():
     global timer
-    pygame.mixer.music.load('data/time-out.mp3')
-    pygame.mixer.music.play()
+    play_music('data/time-out.mp3')
     timer = timer_game
     next_question()
+
+
+def music_player():
+    global flPause, vol, event
+    if event.key == pygame.K_SPACE:
+        flPause = not flPause
+        if flPause:
+            pygame.mixer.music.pause()
+        else:
+            pygame.mixer.music.unpause()
+    elif event.key == pygame.K_LEFT:
+        vol -= 0.1
+        pygame.mixer.music.set_volume(vol)
+    elif event.key == pygame.K_RIGHT:
+        vol += 0.1
+        pygame.mixer.music.set_volume(vol)
 
 
 def terminate():
@@ -160,10 +176,15 @@ def terminate():
     sys.exit()
 
 
+def play_music(name_music):
+    pygame.mixer.music.load(name_music)
+    pygame.mixer.music.play()
+
+
 def start_screen():
+    global event
     if end_game:
-        pygame.mixer.music.load('data/end_game.mp3')
-        pygame.mixer.music.play()
+        play_music('data/end_game.mp3')
         intro_text = ["Игра окончена", "",
                       f"Вы набрали {points} баллов"]
     else:
@@ -176,7 +197,7 @@ def start_screen():
     font = pygame.font.Font(None, 30)
     text_coord = 50
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
+        string_rendered = font.render(line, True, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -197,8 +218,7 @@ def start_screen():
 
 def level(difficulty_level):
     global running, timer, timer_game, suggest, question_number, hall
-    pygame.mixer.music.load('data/level_selection_music.mp3')
-    pygame.mixer.music.play()
+    play_music('data/music_first_question.mp3')
     running = True
     if difficulty_level == 1:
         timer_game = 31
@@ -215,9 +235,10 @@ def level(difficulty_level):
 
 
 def menu():
-    global running, f
-    pygame.mixer.music.load("data/fon_music.mp3")
-    pygame.mixer.music.play(-1)
+    global running, f, event, x, y, answers, suggest_hall
+    answers = [1, 1, 1, 1]
+    suggest_hall = False
+    play_music("data/start_menu_music.mp3")
     f = open('data/question', encoding='utf-8', mode='r+')
     f = f.read().split('\n')
     screen.fill((0, 0, 0))
@@ -234,6 +255,9 @@ def menu():
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 410 <= y <= 470):
                 terminate()
+            elif event.type == pygame.KEYDOWN:
+                music_player()
+        pygame.mixer.music.queue("data/menu_music.mp3")
         render_menu()
         pygame.display.flip()
 
@@ -257,18 +281,7 @@ while running:
             running = False
             menu()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                flPause = not flPause
-                if flPause:
-                    pygame.mixer.music.pause()
-                else:
-                    pygame.mixer.music.unpause()
-            elif event.key == pygame.K_LEFT:
-                vol -= 0.1
-                pygame.mixer.music.set_volume(vol)
-            elif event.key == pygame.K_RIGHT:
-                vol += 0.1
-                pygame.mixer.music.set_volume(vol)
+            music_player()
     timer -= clock.tick(1000) / 1000
     if int(timer) == 0:
         time_out()
