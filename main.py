@@ -28,16 +28,38 @@ def terminate():
     sys.exit()
 
 
+def rules_screen():
+    screen = pygame.display.set_mode((800, 400))
+    with open('rules', encoding='utf-8') as file:
+        h = 0
+        f = file.read().split('\n')
+        for i in range(len(f)):
+            font = pygame.font.Font(None, 20)
+            text = font.render(f[i], True, 'white')
+            screen.blit(text, (0, 0 + h))
+            h += 20
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return level_screen()
+        pygame.display.flip()
+
+
 def level_screen():
     screen = pygame.display.set_mode((800, 400))
     img1 = load_image('data/level_1.bmp')
     img2 = load_image('data/level_2.bmp')
     img3 = load_image('data/level_3.bmp')
     # img4 = load_image('data/бонусный уровень')
+    infoimg = load_image('data/info.png')
     screen.blit(img1, (50, 150))
     screen.blit(img2, (250, 150))
     screen.blit(img3, (450, 150))
     # screen.blit(img4, (650, 150)
+    screen.blit(infoimg, (730, 330))
     font = pygame.font.Font(None, 40)
     text = font.render('ВЫБЕРИТЬ УРОВЕНЬ', True, 'white')
     screen.blit(text, (260, 20))
@@ -53,6 +75,8 @@ def level_screen():
                 return (11, 20)
             elif event.type == pygame.MOUSEBUTTONDOWN and (450 <= x <= 640 and 150 <= y <= 250):
                 return (21, 30)
+            elif event.type == pygame.MOUSEBUTTONDOWN and (730 <= x <= 800 and 330 <= y <= 400):
+                return rules_screen()
         pygame.display.flip()
 
 
@@ -66,7 +90,7 @@ def game_over_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return
+                return  # start_window()
         pygame.display.flip()
 
 
@@ -164,7 +188,8 @@ class TextInputBox(pygame.sprite.Sprite):
                     text_ += event.unicode
                 self.render_text()
 
-c = 0
+
+c = 1
 
 
 def letter_in_word():
@@ -200,13 +225,11 @@ all_lamp_sprites = pygame.sprite.Group()
 lamp = pygame.sprite.Sprite(all_lamp_sprites)
 lamp.image = load_image("data/lamp.jpg")
 lamp.rect = lamp.image.get_rect()
-lamp.mask = pygame.mask.from_surface(lamp.image)
 
 font = pygame.font.Font(None, 20)
 text1 = font.render('Введите букву:', True, 'white')
 board.screen.blit(text1, (405, 10))
 
-field_for_entering_letters = pygame.draw.rect(board.screen, 'white', (400, 5, 395, 300), 2)
 font_letter = pygame.font.Font(None, 100)
 text_input_box = TextInputBox(400, 30, 395, font_letter)
 grop_1 = pygame.sprite.Group(text_input_box)
