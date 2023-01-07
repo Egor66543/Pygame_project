@@ -37,10 +37,11 @@ def level_screen():
     screen.blit(img1, (50, 150))
     screen.blit(img2, (250, 150))
     screen.blit(img3, (450, 150))
-    # screen.blit(img3, (650, 150)
+    # screen.blit(img4, (650, 150)
     font = pygame.font.Font(None, 40)
     text = font.render('ВЫБЕРИТЬ УРОВЕНЬ', True, 'white')
     screen.blit(text, (260, 20))
+    # правила игры
     while True:
         for event in pygame.event.get():
             x, y = pygame.mouse.get_pos()
@@ -55,6 +56,24 @@ def level_screen():
         pygame.display.flip()
 
 
+def game_over_screen():
+    screen = pygame.display.set_mode((600, 400))
+    img = load_image('data/gameover.png')
+    screen.blit(img, (0, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+
+
+def winner_screen():
+    pass
+
+
 a, b = level_screen()
 con = sqlite3.connect("game_words.db")
 cur = con.cursor()
@@ -66,6 +85,9 @@ while True:
 word = cur.execute(f'''SELECT word FROM words WHERE id={id_word}''').fetchone()[0]
 description = cur.execute(f'''SELECT description FROM words WHERE id={id_word}''').fetchone()[0]
 level = cur.execute(f'''SELECT level FROM words WHERE id={id_word}''').fetchone()[0]
+point = 0
+FINE = {1: 10, 2: 30, 3: 40, 'bonus': 100}
+W_POINTS = {1: 50, 2: 150, 3: 250, 'bonus': 1000}
 
 
 def description_f():
@@ -83,20 +105,27 @@ class Board:
         self.h, self.w = h, w
         self.screen = pygame.display.set_mode((h, w))
         self.a = 50
-        self.point = 0
 
     def render(self):
+        self.screen.fill(0)
         font1 = pygame.font.Font(None, 20)
-        text = font1.render(f'Points: {self.point}', True, 'white')
+        text = font1.render(f'Points: {point}', True, 'white')
         board.screen.blit(text, (60, 10))
 
         text = font1.render(f'Level: {level}', True, 'white')
-        board.screen.blit(text, (130, 10))
+        board.screen.blit(text, (170, 10))
 
         k = 0
         for _ in range(len(word)):
             pygame.draw.rect(self.screen, 'white', (50 + k, 400, self.a, self.a), 2)
             k += self.a
+
+    def update_points(self):
+        pygame.draw.rect(self.screen, 'black', (55, 0, 100, 30))
+        font1 = pygame.font.Font(None, 20)
+        text = font1.render(f'Points: {point}', True, 'white')
+        board.screen.blit(text, (60, 10))
+
 
 text_ = ''
 
@@ -135,18 +164,34 @@ class TextInputBox(pygame.sprite.Sprite):
                     text_ += event.unicode
                 self.render_text()
 
+c = 0
+
 
 def letter_in_word():
+    global point
+    global c
     letter = text_[-1]
-    h, c = 0, 0
-    if letter in word:
-        sp = [i for i, j in enumerate(word) if j == letter]
-        font = pygame.font.Font(None, 50)
-        for i in range(len(sp)):
-            text = font.render(f'{letter}', True, 'white')
-            board.screen.blit(text, (60 + 50 * sp[i], 400))
-    elif letter not in word:
-        pass
+    h = 0
+    dl = len(word)
+    if dl <= 0:
+        point += W_POINTS[level]
+        board.update_points()
+        winner_screen()
+    elif c == 3:
+        game_over_screen()
+    else:
+        if letter in word:
+            sp = [i for i, j in enumerate(word) if j == letter]
+            for i in range(len(sp)):
+                font1 = pygame.font.Font(None, 50)
+                text = font1.render(f'{letter}', True, 'white')
+                board.screen.blit(text, (60 + 50 * sp[i], 400))
+                dl -= 1
+        elif letter not in word:
+            c += 1
+            point -= FINE[level]
+            board.update_points()
+            h += 20
 
 
 board = Board(800, 700)
@@ -177,6 +222,8 @@ while running:
         x, y = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONDOWN and (0 <= x <= 50 and 0 <= y <= 51):
             description_f()
+            point -= 100
+            board.update_points()
         if event.type == pygame.KEYDOWN and event.key == pygame.K_z:
             letter_in_word()
     all_lamp_sprites.draw(board.screen)
