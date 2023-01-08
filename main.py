@@ -53,17 +53,16 @@ def level_screen():
     img1 = load_image('data/level_1.bmp')
     img2 = load_image('data/level_2.bmp')
     img3 = load_image('data/level_3.bmp')
-    # img4 = load_image('data/бонусный уровень')
+    img4 = load_image('data/bonus.png')
     infoimg = load_image('data/info.png')
     screen.blit(img1, (50, 150))
     screen.blit(img2, (250, 150))
     screen.blit(img3, (450, 150))
-    # screen.blit(img4, (650, 150)
+    screen.blit(img4, (630, 150))
     screen.blit(infoimg, (730, 330))
     font = pygame.font.Font(None, 40)
     text = font.render('ВЫБЕРИТЬ УРОВЕНЬ', True, 'white')
     screen.blit(text, (260, 20))
-    # правила игры
     while True:
         for event in pygame.event.get():
             x, y = pygame.mouse.get_pos()
@@ -73,8 +72,10 @@ def level_screen():
                 return (1, 10)
             elif event.type == pygame.MOUSEBUTTONDOWN and (250 <= x <= 440 and 150 <= y <= 250):
                 return (11, 20)
-            elif event.type == pygame.MOUSEBUTTONDOWN and (450 <= x <= 640 and 150 <= y <= 250):
+            elif event.type == pygame.MOUSEBUTTONDOWN and (450 <= x <= 600 and 150 <= y <= 250):
                 return (21, 30)
+            elif event.type == pygame.MOUSEBUTTONDOWN and (620 <= x <= 750 and 150 <= y <= 250):
+                return (31, 31)
             elif event.type == pygame.MOUSEBUTTONDOWN and (730 <= x <= 800 and 330 <= y <= 400):
                 return rules_screen()
         pygame.display.flip()
@@ -95,7 +96,17 @@ def game_over_screen():
 
 
 def winner_screen():
-    pass
+    screen = pygame.display.set_mode((900, 600))
+    img = load_image('data/winners-image.jpg')
+    screen.blit(img, (0, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # start_window()
+        pygame.display.flip()
 
 
 a, b = level_screen()
@@ -106,9 +117,11 @@ while True:
     characteristic = cur.execute(f'''select characteristic from words where id={id_word}''').fetchone()[0]
     if characteristic == '-':
         break
+
 word = cur.execute(f'''SELECT word FROM words WHERE id={id_word}''').fetchone()[0]
 description = cur.execute(f'''SELECT description FROM words WHERE id={id_word}''').fetchone()[0]
 level = cur.execute(f'''SELECT level FROM words WHERE id={id_word}''').fetchone()[0]
+print(level)
 point = 0
 FINE = {1: 10, 2: 30, 3: 40, 'bonus': 100}
 W_POINTS = {1: 50, 2: 150, 3: 250, 'bonus': 1000}
@@ -190,19 +203,16 @@ class TextInputBox(pygame.sprite.Sprite):
 
 
 c = 1
+dl = len(word)
 
 
 def letter_in_word():
     global point
     global c
+    global dl
     letter = text_[-1]
     h = 0
-    dl = len(word)
-    if dl <= 0:
-        point += W_POINTS[level]
-        board.update_points()
-        winner_screen()
-    elif c == 3:
+    if c == 3:
         game_over_screen()
     else:
         if letter in word:
@@ -211,13 +221,17 @@ def letter_in_word():
                 font1 = pygame.font.Font(None, 50)
                 text = font1.render(f'{letter}', True, 'white')
                 board.screen.blit(text, (60 + 50 * sp[i], 400))
-                dl -= 1
+            dl -= 1 * len(sp)
         elif letter not in word:
             c += 1
             point -= FINE[level]
             board.update_points()
             h += 20
-
+    if dl <= 0:
+        point += W_POINTS[level]
+        board.update_points()
+        cur.execute(f'''update words set characteristic = "+" where id={id_word}''')
+        winner_screen()
 
 board = Board(800, 700)
 board.render()
@@ -251,7 +265,6 @@ while running:
             letter_in_word()
     all_lamp_sprites.draw(board.screen)
     grop_1.update(event_list)
-
     grop_1.draw(board.screen)
     pygame.display.flip()
 
