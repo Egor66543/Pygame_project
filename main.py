@@ -109,6 +109,14 @@ def winner_screen():
         pygame.display.flip()
 
 
+def water():
+    if c == 2:
+        pygame.draw.rect(board.screen, 'black', (62, 100, 238, 50))
+    elif c == 3:
+        pygame.draw.rect(board.screen, 'black', (62, 100, 238, 150))
+    pygame.display.flip()
+
+
 a, b = level_screen()
 con = sqlite3.connect("game_words.db")
 cur = con.cursor()
@@ -117,11 +125,9 @@ while True:
     characteristic = cur.execute(f'''select characteristic from words where id={id_word}''').fetchone()[0]
     if characteristic == '-':
         break
-
 word = cur.execute(f'''SELECT word FROM words WHERE id={id_word}''').fetchone()[0]
 description = cur.execute(f'''SELECT description FROM words WHERE id={id_word}''').fetchone()[0]
 level = cur.execute(f'''SELECT level FROM words WHERE id={id_word}''').fetchone()[0]
-print(level)
 point = 0
 FINE = {1: 10, 2: 30, 3: 40, 'bonus': 100}
 W_POINTS = {1: 50, 2: 150, 3: 250, 'bonus': 1000}
@@ -151,6 +157,11 @@ class Board:
 
         text = font1.render(f'Level: {level}', True, 'white')
         board.screen.blit(text, (170, 10))
+
+        pygame.draw.line(board.screen, 'white', (60, 80), (60, 300), width=2)
+        pygame.draw.line(board.screen, 'white', (300, 80), (300, 300), width=2)
+        pygame.draw.line(board.screen, 'white', (60, 300), (300, 300), width=2)
+        pygame.draw.rect(board.screen, 'Navy', (62, 100, 238, 200))
 
         k = 0
         for _ in range(len(word)):
@@ -231,7 +242,10 @@ def letter_in_word():
         point += W_POINTS[level]
         board.update_points()
         cur.execute(f'''update words set characteristic = "+" where id={id_word}''')
+        con.commit()
         winner_screen()
+    water()
+
 
 board = Board(800, 700)
 board.render()
@@ -267,5 +281,6 @@ while running:
     grop_1.update(event_list)
     grop_1.draw(board.screen)
     pygame.display.flip()
+    con.close()
 
 pygame.quit()
