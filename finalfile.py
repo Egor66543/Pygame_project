@@ -520,7 +520,6 @@ if STATE == 2:
         grop_1.update(event_list)
         grop_1.draw(board.screen)
         pygame.display.flip()
-        con.close()
 
     pygame.quit()
 
