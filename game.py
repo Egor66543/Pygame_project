@@ -9,8 +9,8 @@ points = 0
 question_number = 0
 user_answer = 0
 all_sprites = pygame.sprite.Group()
-width = 638
-height = 539
+width = 500
+height = 400
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 end_game = False
@@ -20,12 +20,14 @@ FPS = 50
 answers = [1, 1, 1, 1]
 vol = 1.0
 flPause = False
-running = False
+running = True
 timer = 0
 timer_game = 0
 f = []
 hall_help_list = ['40%', '30%', '20%', '10%']
 suggest_hall = False
+x, y = pygame.mouse.get_pos()
+event = pygame.event.get()
 
 
 def load_image(name, colorkey=None):
@@ -51,7 +53,7 @@ def draw_text(text_x, text_y, size, message_text):
     screen.blit(text, (text_x, text_y))
 
 
-def render():
+def render_quiz():
     global points
     screen.fill((0, 0, 0))
     image = load_image('fon.jpg')
@@ -90,14 +92,14 @@ def render():
     draw_text(360, 500, 30, f"Время {str(int(timer))}")
 
 
-def render_menu():
+def render_menu_quiz():
     image = load_image('level_button.png')
     screen.blit(image, (15, 40))
     image = load_image('level_button.png')
     screen.blit(image, (15, 110))
     image = load_image('level_button.png')
     screen.blit(image, (15, 410))
-    image = load_image('1.svg')
+    image = load_image('logo.svg')
     screen.blit(image, (300, 20))
     draw_text(70, 60, 30, "Level 1")
     draw_text(70, 130, 30, "Level 2")
@@ -145,7 +147,7 @@ def next_question():
     if question_number == 120 or question_number == 240:
         running = False
         end_game = True
-        start_screen()
+        start_screen_quiz()
 
 
 def time_out():
@@ -155,18 +157,18 @@ def time_out():
     next_question()
 
 
-def music_player():
-    global flPause, vol, event
-    if event.key == pygame.K_SPACE:
+def music_player(ev):
+    global flPause, vol
+    if ev.key == pygame.K_SPACE:
         flPause = not flPause
         if flPause:
             pygame.mixer.music.pause()
         else:
             pygame.mixer.music.unpause()
-    elif event.key == pygame.K_LEFT:
+    elif ev.key == pygame.K_LEFT:
         vol -= 0.1
         pygame.mixer.music.set_volume(vol)
-    elif event.key == pygame.K_RIGHT:
+    elif ev.key == pygame.K_RIGHT:
         vol += 0.1
         pygame.mixer.music.set_volume(vol)
 
@@ -181,17 +183,17 @@ def play_music(name_music):
     pygame.mixer.music.play()
 
 
-def start_screen():
-    global event
+def start_screen_quiz():
+    global width, height, event
     if end_game:
         play_music('data/end_game.mp3')
         intro_text = ["Игра окончена", "",
                       f"Вы набрали {points} баллов"]
     else:
         intro_text = ["Викторина", "",
-                      "1 правильный ответ",
-                      "приносит 1 балл",
-                      "Всего в викторине 40 вопросов"]
+                      "1 правильный ответ приносит 1 балл",
+                      "Всего в викторине 2 уровня сложности",
+                      'На каждом по 20 вопросов']
     fon = pygame.transform.scale(load_image('start_fon.jpg'), (width, height))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
@@ -211,12 +213,12 @@ def start_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 if end_game:
-                    menu()
+                    menu_quiz()
                 return
         pygame.display.flip()
 
 
-def level(difficulty_level):
+def level_quiz(difficulty_level):
     global running, timer, timer_game, suggest, question_number, hall
     play_music('data/music_first_question.mp3')
     running = True
@@ -232,61 +234,122 @@ def level(difficulty_level):
         suggest = False
         hall = False
         question_number = 120
+    quiz()
 
 
-def menu():
+def menu_quiz():
     global running, f, event, x, y, answers, suggest_hall
     answers = [1, 1, 1, 1]
     suggest_hall = False
     play_music("data/start_menu_music.mp3")
     f = open('data/question', encoding='utf-8', mode='r+')
     f = f.read().split('\n')
-    screen.fill((0, 0, 0))
+    screen.fill((0, 0, 15))
     while True:
         for event in pygame.event.get():
             x, y = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
                 terminate()
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 40 <= y <= 100):
-                level(1)
+                level_quiz(1)
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 110 <= y <= 170):
-                level(2)
+                level_quiz(2)
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 410 <= y <= 470):
                 terminate()
             elif event.type == pygame.KEYDOWN:
-                music_player()
+                music_player(event)
         pygame.mixer.music.queue("data/menu_music.mp3")
-        render_menu()
+        render_menu_quiz()
         pygame.display.flip()
 
 
-start_screen()
-menu()
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        x, y = pygame.mouse.get_pos()
-        if event.type == pygame.MOUSEBUTTONDOWN and (100 <= x <= 570 and 190 <= y <= 450):
-            user_answer = (y - 190) // 65 + 1
-        elif suggest and event.type == pygame.MOUSEBUTTONDOWN and (61 <= x <= 140 and 480 <= y <= 540):
-            suggest_50_50()
-        elif hall and event.type == pygame.MOUSEBUTTONDOWN and (141 <= x <= 220 and 480 <= y <= 540):
-            hall_help()
-        elif event.type == pygame.MOUSEBUTTONDOWN and (0 <= x <= 60 and 480 <= y <= 540):
-            next_question()
-        elif event.type == pygame.MOUSEBUTTONDOWN and (578 <= x <= 638 and 480 <= y <= 540):
-            running = False
-            menu()
-        elif event.type == pygame.KEYDOWN:
-            music_player()
-    timer -= clock.tick(1000) / 1000
-    if int(timer) == 0:
-        time_out()
-    if user_answer != 0:
-        checking_the_answer()
-    pygame.mixer.music.queue("data/fon_music.mp3")
-    render()
-    pygame.display.flip()
+def quiz():
+    global event, running, x, y, timer, user_answer
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            x, y = pygame.mouse.get_pos()
+            if event.type == pygame.MOUSEBUTTONDOWN and (100 <= x <= 570 and 190 <= y <= 450):
+                user_answer = (y - 190) // 65 + 1
+            elif suggest and event.type == pygame.MOUSEBUTTONDOWN and (61 <= x <= 140 and 480 <= y <= 540):
+                suggest_50_50()
+            elif hall and event.type == pygame.MOUSEBUTTONDOWN and (141 <= x <= 220 and 480 <= y <= 540):
+                hall_help()
+            elif event.type == pygame.MOUSEBUTTONDOWN and (0 <= x <= 60 and 480 <= y <= 540):
+                next_question()
+            elif event.type == pygame.MOUSEBUTTONDOWN and (578 <= x <= 638 and 480 <= y <= 540):
+                running = False
+                menu_quiz()
+            elif event.type == pygame.KEYDOWN:
+                music_player(event)
+        timer -= clock.tick(1000) / 1000
+        if int(timer) == 0:
+            time_out()
+        if user_answer != 0:
+            checking_the_answer()
+        pygame.mixer.music.queue("data/fon_music.mp3")
+        render_quiz()
+        pygame.display.flip()
+
+
+def game_quiz():
+    global width, height, screen
+    width = 638
+    height = 539
+    screen = pygame.display.set_mode((width, height))
+    start_screen_quiz()
+    menu_quiz()
+
+
+def render_start_menu(button):
+    image = load_image('s1.jpg')
+    screen.blit(image, (0, 0))
+    image = load_image('s2.jpg')
+    screen.blit(image, (125, 50))
+    image = load_image('s2.jpg')
+    screen.blit(image, (125, 160))
+    if button == 1:
+        image = load_image('s3.jpg')
+        screen.blit(image, (125, 50))
+    if button == 2:
+        image = load_image('s3.jpg')
+        screen.blit(image, (125, 160))
+    image = load_image('s4.jpg')
+    screen.blit(image, (171, 270))
+    draw_text(200, 200, 30, "Викторина")
+    draw_text(200, 200, 30, "Викторина")
+
+
+def start_menu():
+    global running, x, y, event
+    button = 0
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            x, y = pygame.mouse.get_pos()
+            if 125 <= x <= 375 and 50 <= y <= 150:
+                if not button:
+                    play_music('data/button_sound_1.mp3')
+                button = 1
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    play_music('data/button_sound_2.mp3')
+                    pass
+            elif 125 <= x <= 375 and 160 <= y <= 260:
+                if not button:
+                    play_music('data/button_sound_1.mp3')
+                button = 2
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    play_music('data/button_sound_2.mp3')
+                    game_quiz()
+            else:
+                button = 0
+
+        render_start_menu(button)
+        pygame.display.flip()
+
+
+start_menu()
