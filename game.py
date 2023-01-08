@@ -10,7 +10,7 @@ question_number = 0
 user_answer = 0
 all_sprites = pygame.sprite.Group()
 width = 500
-height = 400
+height = 470
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 end_game = False
@@ -99,10 +99,13 @@ def render_menu_quiz():
     screen.blit(image, (15, 110))
     image = load_image('level_button.png')
     screen.blit(image, (15, 410))
+    image = load_image('level_button.png')
+    screen.blit(image, (15, 180))
     image = load_image('logo.svg')
     screen.blit(image, (300, 20))
     draw_text(70, 60, 30, "Level 1")
     draw_text(70, 130, 30, "Level 2")
+    draw_text(70, 200, 30, "Меню")
     draw_text(70, 430, 30, "Выход")
 
 
@@ -256,6 +259,9 @@ def menu_quiz():
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 110 <= y <= 170):
                 level_quiz(2)
                 return
+            elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 180 <= y <= 240):
+                start_menu()
+                return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 410 <= y <= 470):
                 terminate()
             elif event.type == pygame.KEYDOWN:
@@ -311,20 +317,30 @@ def render_start_menu(button):
     screen.blit(image, (125, 50))
     image = load_image('s2.jpg')
     screen.blit(image, (125, 160))
+    image = load_image('s2.jpg')
+    screen.blit(image, (125, 270))
     if button == 1:
         image = load_image('s3.jpg')
         screen.blit(image, (125, 50))
     if button == 2:
         image = load_image('s3.jpg')
         screen.blit(image, (125, 160))
+    if button == 3:
+        image = load_image('s3.jpg')
+        screen.blit(image, (125, 270))
     image = load_image('s4.jpg')
-    screen.blit(image, (171, 270))
+    screen.blit(image, (171, 370))
+    draw_text(200, 90, 30, "Виселица")
     draw_text(200, 200, 30, "Викторина")
-    draw_text(200, 200, 30, "Викторина")
+    draw_text(200, 310, 30, "Выход")
 
 
 def start_menu():
-    global running, x, y, event
+    global running, x, y, event, width, height, screen
+    pygame.mixer.music.stop()
+    width = 500
+    height = 470
+    screen = pygame.display.set_mode((width, height))
     button = 0
     while running:
         for event in pygame.event.get():
@@ -345,6 +361,12 @@ def start_menu():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     play_music('data/button_sound_2.mp3')
                     game_quiz()
+            elif 125 <= x <= 375 and 270 <= y <= 370:
+                if not button:
+                    play_music('data/button_sound_1.mp3')
+                button = 3
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    terminate()
             else:
                 button = 0
 
