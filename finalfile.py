@@ -34,7 +34,7 @@ def selection_screen():
 
 def load_image(name, colorkey=None):
     if not os.path.isfile(name):
-        print('Файл не найден')
+        print(f'Файл не найден {name}')
         sys.exit()
     image = pygame.image.load(name)
     if colorkey is not None:
@@ -161,17 +161,17 @@ def draw_text(text_x, text_y, size, message_text):
 def render_quiz():
     global points
     screen.fill((0, 0, 0))
-    image = load_image('fon.jpg')
+    image = load_image('data/fon.jpg')
     screen.blit(image, (0, 0))
-    image = load_image('skip_question_button.png')
+    image = load_image('data/skip_question_button.png')
     screen.blit(image, (0, 480))
-    image = load_image('exit_button.png')
+    image = load_image('data/exit_button.png')
     screen.blit(image, (578, 480))
     if suggest:
-        image = load_image('50_50.png')
+        image = load_image('data/50_50.png')
         screen.blit(image, (60, 480))
     if hall:
-        image = load_image('hall_help.jpg')
+        image = load_image('data/hall_help.jpg')
         screen.blit(image, (140, 480))
 
     draw_text(60, 90, 30, f[question_number])
@@ -198,15 +198,15 @@ def render_quiz():
 
 
 def render_menu_quiz():
-    image = load_image('level_button.png')
+    image = load_image('data/level_button.png')
     screen.blit(image, (15, 40))
-    image = load_image('level_button.png')
+    image = load_image('data/level_button.png')
     screen.blit(image, (15, 110))
-    image = load_image('level_button.png')
+    image = load_image('data/level_button.png')
     screen.blit(image, (15, 410))
-    image = load_image('level_button.png')
+    image = load_image('data/level_button.png')
     screen.blit(image, (15, 180))
-    image = load_image('logo.svg')
+    image = load_image('data/logo.svg')
     screen.blit(image, (300, 20))
     draw_text(70, 60, 30, "Level 1")
     draw_text(70, 130, 30, "Level 2")
@@ -297,7 +297,7 @@ def start_screen_quiz():
                       "1 правильный ответ приносит 1 балл",
                       "Всего в викторине 2 уровня сложности",
                       'На каждом по 20 вопросов']
-    fon = pygame.transform.scale(load_image('start_fon.jpg'), (width, height))
+    fon = pygame.transform.scale(load_image('data/start_fon.jpg'), (width, height))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
@@ -360,7 +360,8 @@ def menu_quiz():
                 level_quiz(2)
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 180 <= y <= 240):
-                start_menu()
+                pygame.mixer.music.stop()z
+                selection_screen()
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 410 <= y <= 470):
                 terminate()
@@ -658,6 +659,6 @@ elif STATE == 1:
     suggest_hall = False
     x, y = pygame.mouse.get_pos()
     event = pygame.event.get()
-    start_menu()
+    game_quiz()
 
 terminate()
