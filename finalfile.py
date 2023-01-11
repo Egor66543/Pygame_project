@@ -431,7 +431,7 @@ def render_start_menu(button):
         screen.blit(image, (125, 270))
     image = load_image('s4.jpg')
     screen.blit(image, (171, 370))
-    draw_text(200, 90, 30, "Виселица")
+    draw_text(200, 90, 30, "Поле чудес")
     draw_text(200, 200, 30, "Викторина")
     draw_text(200, 310, 30, "Выход")
 
