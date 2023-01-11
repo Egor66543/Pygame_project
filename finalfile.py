@@ -360,7 +360,7 @@ def menu_quiz():
                 level_quiz(2)
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 180 <= y <= 240):
-                pygame.mixer.music.stop()z
+                pygame.mixer.music.stop()
                 selection_screen()
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN and (15 <= x <= 195 and 410 <= y <= 470):
