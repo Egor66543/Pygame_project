@@ -117,6 +117,7 @@ def game_over_screen():
                     event.type == pygame.MOUSEBUTTONDOWN:
                 return selection_screen()
         pygame.display.flip()
+        quit()
 
 
 def winner_screen():
@@ -131,6 +132,7 @@ def winner_screen():
                     event.type == pygame.MOUSEBUTTONDOWN:
                 return selection_screen()
         pygame.display.flip()
+        quit()
 
 
 def water():
